@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.StateAndNumber;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 public class ExtFlightDelaysController {
+
 	private Model model;
 
     @FXML // ResourceBundle that was given to the FXMLLoader
@@ -45,19 +47,55 @@ public class ExtFlightDelaysController {
     @FXML // fx:id="btnSimula"
     private Button btnSimula; // Value injected by FXMLLoader
 
+    private String state;
+    
     @FXML
     void doCreaGrafo(ActionEvent event) {
 
+    	model.creaGrafo();
+    	btnCreaGrafo.setDisable(true);
+    	cmbBoxStati.getItems().addAll(model.getVertici());
     }
 
     @FXML
     void doSimula(ActionEvent event) {
 
+    	txtResult.clear();
+    	
+    	if(cmbBoxStati.getValue()!=null) {
+    		
+    		try {
+    		
+    			int g = Integer.parseInt(txtG.getText());
+    			int t = Integer.parseInt(txtT.getText());
+    			
+    		    txtResult.appendText(model.simulate(g, t, cmbBoxStati.getValue()));
+    		    
+    		    }catch(NumberFormatException nfe) {
+    			txtResult.appendText("Si prega di inserire due numeri interi");
+    			return;
+    		}
+    	}
+    	
     }
 
     @FXML
     void doVisualizzaVelivoli(ActionEvent event) {
 
+    	txtResult.clear();
+    	
+       state  =  cmbBoxStati.getValue();
+       
+       if(state!=null) {
+    	       txtResult.appendText("Stati successivi ordinati per numero di veivoli decrescenti\n\n");
+    	   for(StateAndNumber stn : model.getSuccessori(state))
+    		   txtResult.appendText(stn.getDest()+"  veicoli: "+stn.getNumV()+"\n");
+    	   
+       }else {
+    	   txtResult.appendText("Si prega di selezionare uno stato");
+    	   return;
+       }
+    	
     }
     
     public void setModel(Model model) {

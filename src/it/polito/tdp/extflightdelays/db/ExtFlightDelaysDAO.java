@@ -7,6 +7,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
@@ -114,5 +119,47 @@ public class ExtFlightDelaysDAO {
 			System.out.println("Errore connessione al database");
 			throw new RuntimeException("Error Connection Database");
 		}
+	}
+
+	public void loadGraph(Set<String> stati, Graph<String, DefaultWeightedEdge> grafo) {
+
+
+		String sql = "SELECT a1.STATE, a2.STATE, COUNT(DISTINCT f.TAIL_NUMBER) as peso " + 
+				"FROM flights f, airports a1, airports a2 " + 
+				"WHERE f.ORIGIN_AIRPORT_ID = a1.ID AND f.DESTINATION_AIRPORT_ID = a2.ID " + 
+				"GROUP BY a1.STATE, a2.STATE ";
+		
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				
+				String stato1 = rs.getString("a1.STATE");
+				String stato2 = rs.getString("a2.STATE");
+				
+			     if(!stati.contains(stato1)) {
+			    	   stati.add(stato1);
+			    	   grafo.addVertex(stato1);
+			     }
+			     if(!stati.contains(stato2)) {
+			    	   stati.add(stato2);
+			    	   grafo.addVertex(stato2);
+			     }
+			     
+			     Graphs.addEdge(grafo, stato1, stato2, rs.getInt("peso"));
+			}
+
+			conn.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+		
+		
+		
 	}
 }
